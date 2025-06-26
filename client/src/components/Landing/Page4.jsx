@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import sc from '../../assets/religion/sc.png';
+import sc1 from '../../assets/religion/sc1.png';
+import sc3 from '../../assets/religion/sc3.png';
+import { FaEnvelope } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import im from '../../assets/religion/Rectangle 4.png';
-import im1 from '../../assets/religion/Rectangle 5.png';
-import im2 from '../../assets/religion/Rectangle 6.png';
-import im3 from '../../assets/religion/Rectangle 7.png';
-import im4 from '../../assets/religion/Rectangle 8.png';
-import im5 from '../../assets/religion/Rectangle 9.png';
-import CountUp from 'react-countup';
 
-const Page2 = () => {
+const Page4 = () => {
+  const [ministers, setMinisters] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     complaints: '',
@@ -32,7 +30,12 @@ const Page2 = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/scam/scam-report`, formData, {
+      const formattedData = {
+        ...formData,
+        dateOfIncident: new Date(formData.dateOfIncident).toISOString(),
+      };
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/scam/scam-report`, formattedData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         timeout: 10000,
       });
       toast.success(response.data.message);
@@ -51,87 +54,67 @@ const Page2 = () => {
     }
   };
 
+  // Fetch minister data from API
+  useEffect(() => {
+    const fetchMinisters = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/profile/leaders`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        if (!response.ok) throw new Error('Failed to fetch ministers');
+        const data = await response.json();
+        if (data.status) {
+          setMinisters(data.data);
+        } else {
+          console.error('API error:', data.message);
+          setMinisters([]);
+          toast.error('Failed to load ministers');
+        }
+      } catch (error) {
+        console.error('Error fetching ministers:', error);
+        setMinisters([]);
+        toast.error('Failed to load ministers');
+      }
+    };
+
+    fetchMinisters();
+  }, []);
+
   return (
-    <div className="bg-[#FAF3DD] p-4">
-      {/* Image Grid Section */}
-      <div className="flex flex-wrap justify-center gap-4 mb-6">
-        {[im, im1, im2, im3, im4].map((img, index) => (
-          <img
-            key={index}
-            src={img}
-            alt={`religious-img-${index}`}
-            className="w-36 h-36 object-cover rounded-md"
-          />
-        ))}
-      </div>
-
-      {/* Religious Stats Section */}
-      <div className="flex flex-col items-center justify-center text-center mb-6 px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-4">
-          <div className="flex flex-col items-center">
-            <p className="text-xl sm:text-2xl font-bold text-[#0A0344]">
-              <CountUp start={0} end={3000000} duration={3.75} separator="," />
-              <br />
-              <span className="text-xs sm:text-sm font-light">
-                Religious Ministers of God
-              </span>
-            </p>
-          </div>
-          <div className="flex flex-col items-center">
-            <p className="text-xl sm:text-2xl font-bold text-[#0A0344]">
-              <CountUp start={0} end={3000} duration={3.75} separator="," />
-              <br />
-              <span className="text-xs sm:text-sm font-light">
-                Christian Denominations
-              </span>
-            </p>
-          </div>
-          <div className="flex flex-col items-center">
-            <p className="text-xl sm:text-2xl font-bold text-[#0A0344]">
-              <CountUp start={0} end={3000} duration={3.75} separator="," />
-              <br />
-              <span className="text-xs sm:text-sm font-light">
-                Islamic Communities
-              </span>
-            </p>
-          </div>
-          <div className="flex flex-col items-center">
-            <p className="text-xl sm:text-2xl font-bold text-[#0A0344]">
-              <CountUp start={0} end={3000} duration={3.75} separator="," />
-              <br />
-              <span className="text-xs sm:text-sm font-light">
-                Traditional followers
-              </span>
-            </p>
+    <div className="bg-indigo-900 text-white min-h-screen flex items-center justify-center px-6 py-12 mt-4">
+      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10">
+        {/* Left Content */}
+        <div className="flex flex-col justify-center">
+          <h1 className="text-2xl md:text-2xl font-bold text-white leading-tight mb-4">
+            Serve God Anywhere in the world <br /> and avoid <span className="text-white">SCAMMERS</span>
+          </h1>
+          <p className="text-lg md:text-xl text-white mb-6">
+            Connect with over 100000 ministers worldwide from the comfort of your home and meet with genuine Men of God.
+          </p>
+          <button 
+            onClick={handleOpenModal}
+            className="bg-white text-blue-900 px-6 py-3 rounded-md text-lg font-semibold hover:bg-indigo-400">
+            Report a scam
+          </button>
+        </div>
+        {/* Image Container */}
+        <div className="flex flex-col items-center">
+          <img src={sc} alt="Image 1" className="w-32 h-auto mb-2 md:w-60" />
+          <div className="flex justify-center w-full">
+            <img src={sc1} alt="Image 2" className="w-32 h-auto md:w-40 mx-2 " />
+            <img src={sc3} alt="Image 3" className="w-32 h-auto md:w-40 mx-2" />
           </div>
         </div>
-
-        <div className="mb-4">
-          <img
-            src={im5}
-            alt="religion-icons"
-            className="w-48 h-32 object-cover rounded-md"
-          />
-        </div>
-        <p className="text-lg text-[#6D6D6D]">
-          e-religion is your search engine for anything and everything religion.
-          As of today, we have <span className="font-bold">74,952,662</span> users worldwide. No annoying ads, no download limits.
-        </p>
-        <button
-          className="bg-[#0A0344] text-white py-2 px-4 mt-4 rounded-md"
-          onClick={handleOpenModal}
-        >
-          Report a scam
-        </button>
       </div>
-
       {/* Scam Report Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-md w-full max-w-md">
             <h2 className="text-xl font-bold mb-4 text-[#0A0344]">Report a Scam</h2>
             <form onSubmit={handleSubmit}>
-              <div className="mb-4">
+              <div className="mb-4 text-black">
                 <label className="block text-sm font-medium text-gray-700">Complaints</label>
                 <textarea
                   name="complaints"
@@ -191,4 +174,4 @@ const Page2 = () => {
   );
 };
 
-export default Page2;
+export default Page4;

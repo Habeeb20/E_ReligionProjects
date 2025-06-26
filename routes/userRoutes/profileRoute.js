@@ -775,6 +775,62 @@ profileRoute.post('/payment/verify', verifyToken, async (req, res) => {
 
 
 
+profileRoute.get('/religious-ground', verifyToken, async (req, res) => {
+  try {
+    const { search, religion, state, lga } = req.query;
+    const query = { role: 'religious_ground' };
+
+    if (search) {
+      query.$or = [
+        { 'profile.localGovtArea': { $regex: search, $options: 'i' } },
+        { 'profile.state': { $regex: search, $options: 'i' } },
+        { 'profile.religion': { $regex: search, $options: 'i' } },
+        { 'profile.firstname': { $regex: search, $options: 'i' } },
+        { 'profile.lastname': { $regex: search, $options: 'i' } },
+        { 'profile.ministryname': { $regex: search, $options: 'i' } },
+      ];
+    }
+    if (religion) query['profile.religion'] = { $regex: religion, $options: 'i' };
+    if (state) query['profile.state'] = { $regex: state, $options: 'i' };
+    if (lga) query['profile.localGovtArea'] = { $regex: lga, $options: 'i' };
+
+    const leaders = await User.aggregate([
+      { $match: { role: 'religious_ground' } },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'profile',
+        },
+      },
+      { $unwind: '$profile' },
+      { $match: query },
+      {
+        $project: {
+          _id: 0,
+          title: '$profile.title',
+          firstname: '$profile.firstname',
+          lastname: '$profile.lastname',
+          localGovtArea: '$profile.localGovtArea',
+          state: '$profile.state',
+          religion: '$profile.religion',
+          ministryname: '$profile.ministryname',
+          email: '$profile.email',
+        },
+      },
+    ]);
+
+    res.status(200).json({ status: true, data: leaders });
+  } catch (error) {
+    console.error('Error fetching religious leaders:', error.message);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch religious leaders' });
+  }
+});
+
+
+
+
 
 // Get user's chat sessions
 // Get user's chat sessions
@@ -1200,6 +1256,47 @@ profileRoute.get('/religion-stats', async (req, res) => {
 
 
 
+
+
+profileRoute.get('/leaders/count-by-state', verifyToken, async (req, res) => {
+  try {
+    const counts = await Profile.aggregate([
+      {
+        $group: {
+          _id: '$state',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          state: '$_id',
+          count: 1,
+        },
+      },
+    ]);
+
+    const stateCounts = counts.reduce((acc, { state, count }) => {
+      acc[state] = count;
+      return acc;
+    }, {});
+
+    const responseData = [
+      { name: 'Lagos Religious leaders', count: stateCounts['Lagos'] || 0, image: '/path-to-im.png' },
+      { name: 'Abuja Religious leaders', count: stateCounts['Abuja'] || 0, image: '/path-to-im1.png' },
+      { name: 'Calabar Religious leaders', count: stateCounts['Calabar'] || 0, image: '/path-to-im2.png' },
+      { name: 'Port-Harcourt Religious leaders', count: stateCounts['Port-Harcourt'] || 0, image: '/path-to-im3.png' },
+      { name: 'Owerri Religious leaders', count: stateCounts['Owerri'] || 0, image: '/path-to-im4.png' },
+      { name: 'Uyo Religious leaders', count: stateCounts['Uyo'] || 0, image: '/path-to-im5.png' },
+    ];
+
+    console.log('Leader counts by state:', responseData);
+    res.status(200).json({ status: true, data: responseData });
+  } catch (error) {
+    console.error('Error counting leaders by state:', error.message);
+    res.status(500).json({ status: 'error', message: 'Failed to count leaders by state' });
+  }
+});
 
 export default profileRoute
 

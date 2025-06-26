@@ -196,6 +196,7 @@ import ChatSession from "./models/chat/chatSessionSchema.js";
 import profileRoute from "./routes/userRoutes/profileRoute.js";
 import authRouter from "./routes/userRoutes/userRoute.js";
 import scamreportRoute from "./routes/others/reportScamRoute.js";
+import RequestReport from "./routes/others/RequestReligion.js"
 import http from "http";
 import multer from "multer";
 import fs from "fs";
@@ -260,6 +261,7 @@ app.use("/api/user", authRouter);
 app.use("/api/profile", profileRoute);
 app.use("/api/payment", userPaymentRouter);
 app.use("/api/scam", scamreportRoute)
+app.use("/api/request", RequestReport )
 
 // Multer configuration
 const storage = multer.diskStorage({
