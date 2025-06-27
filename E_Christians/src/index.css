@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+
+/* Example for Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+
+
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  font-family: 'Arial', sans-serif; /* Ensure the font is imported if not system default */
+  background-color: #f0f0f0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #333;
+}
+
+p {
+  color: #555;
+}
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.unread-count {
+  background-color: #4f46e5; /* Indigo background */
+  color: white;
+  border-radius: 50%;
+  padding: 0 6px;
+  margin-left: 8px;
+  font-size: 12px;
+  vertical-align: super;
+}
+
