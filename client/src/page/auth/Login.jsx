@@ -36,6 +36,7 @@ const Login = () => {
       if (response.status === 200) {
         const { token } = response.data;
         localStorage.setItem('token', token);
+        localStorage.setItem('email', response.data.email);
         localStorage.setItem("userId", response.data?.userId);
         console.log(response.data?.userId, "user id login")
          const role = response.data.role;

@@ -337,7 +337,8 @@ authRouter.post("/login", async(req, res) => {
         message: `successfully logged in. ${roleMessage}`,
         token,
         role: user.role,
-        userId:user._id
+        userId:user._id,
+        email:user.email
       });
     } catch (error) {
       console.log(error);

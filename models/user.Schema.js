@@ -77,6 +77,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+     listingType: { type: String, enum: ['front', 'featured', 'mostViewed'], default: null },
+  paymentStatus: { type: String, enum: ['pending', 'paid', 'failed', 'expired'], default: 'pending' },
+  subscriptionStart: { type: Date, default: null },
+  paymentHistory: [{
+    amount: Number,
+    date: { type: Date, default: Date.now },
+    status: { type: String, enum: ['success', 'failed'] },
+  }],
   },
   { timestamps: true }
 );
@@ -121,3 +129,14 @@ userSchema.index({ status: 1 });
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 export default User;
+
+
+
+
+
+
+
+
+
+
+

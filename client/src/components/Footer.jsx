@@ -2,7 +2,7 @@ import React from 'react';
 
 const Footer = () => {
   return (
-    <footer className="bg-indigo-900 text-white py-8 mt-12">
+    <footer className="bg-indigo-900 h-90 text-white py-8 mt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About Section */}
@@ -54,8 +54,8 @@ const Footer = () => {
             </div>
           </div>
         </div>
-        <div className="mt-8 pt-4 border-t border-gray-700 text-center text-sm text-gray-400">
-          <p>&copy; {new Date().getFullYear()} FaithConnect. All rights reserved.</p>
+        <div className="mt-8 pt-4 border-t border-gray-700 text-center text-white text-sm ">
+          <p className='text-white'>&copy; {new Date().getFullYear()}  All rights reserved.</p>
         </div>
       </div>
     </footer>

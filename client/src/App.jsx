@@ -16,6 +16,11 @@ import LeaderBanner from './page/dashboard/LeaderBanner';
 import { ThemeProvider } from './page/ThemeContext';
 import LeaderChat from './page/chat/LeaderChat';
 import LeaderProfile from './page/Leader/LeaderProfile';
+import AboutUs from './page/landingPage/AboutUs';
+import Religion from './page/landingPage/Religion';
+import Report from './page/landingPage/Report';
+import ReligiousDashboard from './page/dashboard/ReligiousDashboard';
+import PaymentVerification from './components/Listing/PaymentVerification';
 const App = () => {
   return (
     <ThemeProvider>
@@ -41,6 +46,11 @@ const App = () => {
           <Route path="/leader-chat" element={<LeaderChat />} />
           <Route path="/leader-chat/:sessionUserId" element={<LeaderChat />} />
           <Route path="/leader/:slug" element={<LeaderProfile />} />
+          <Route path="/aboutus" element={<AboutUs />} />
+          <Route path="/religion" element={<Religion />} />
+          <Route path="/report" element={<Report />} />
+          <Route path="/profile/verify-payment" element={<PaymentVerification />} />
+          <Route path="/religiousdashboard" element={<ReligiousDashboard />} />
 
           </Routes>
         <Toaster />

@@ -11,8 +11,13 @@ import Transaction from "../../models/chat/transactionSchema.js";
 import Comment from "../../models/profileDetails/commentSchema.js";
 import Share from "../../models/profileDetails/shareSchema.js";
 import Like from "../../models/profileDetails/likeSchemea.js";
-;
+import cron from 'node-cron';
+
 dotenv.config()
+
+
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || 'YOUR_PAYSTACK_SECRET_KEY'; // Use env variable
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 const profileRoute = express.Router()
 
@@ -830,6 +835,33 @@ profileRoute.get('/religious-ground', verifyToken, async (req, res) => {
 
 
 
+////count leaders by state
+profileRoute.get('/getcountleader', async (req, res) => {
+  try {
+    const { state } = req.query;
+
+    
+    if (!state || !Array.isArray(state)) {
+      console.log("an error is here");
+      return res.status(400).json({ message: "state query parameter must be an array of strings" });
+    }
+
+   
+    const counts = await Promise.all(state?.map(async (sta) => {
+      const count = await User.countDocuments({
+        role: 'leader', 
+        state: { $regex: sta, $options: 'i' } 
+      });
+      return { state: sta, count };
+    }));
+
+    res.json(counts);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 
 // Get user's chat sessions
@@ -1298,7 +1330,158 @@ profileRoute.get('/leaders/count-by-state', verifyToken, async (req, res) => {
   }
 });
 
+
+
+
+
+
+/////listing process
+// Select listing type and initialize Paystack transaction
+profileRoute.post('/select-listing', verifyToken, async (req, res) => {
+  try {
+    const { listingType } = req.body;
+    const userId = req.user.id;
+
+    if (!['front', 'featured', 'mostViewed'].includes(listingType)) {
+      return res.status(400).json({ status: 'error', message: 'Invalid listing type' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
+
+    user.listingType = listingType;
+    user.paymentStatus = 'pending';
+    await user.save();
+
+    const price = { front: 30000, featured: 20000, mostViewed: 10000 }[listingType] * 100; // Convert to kobo
+    const paystackResponse = await axios.post(
+      'https://api.paystack.co/transaction/initialize',
+      {
+        email: user.email,
+        amount: price,
+        plan: `PLN_${listingType.toUpperCase()}_MONTHLY`,
+        callback_url: `${FRONTEND_URL}/profile/verify-payment`,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (paystackResponse.data.status) {
+      res.status(200).json({ status: true, redirectUrl: paystackResponse.data.data.authorization_url });
+    } else {
+      throw new Error('Paystack initialization failed: ' + paystackResponse.data.message);
+    }
+  } catch (error) {
+    console.error('Error selecting listing:', error.message, error.response?.data);
+    res.status(500).json({ status: 'error', message: 'Failed to initiate payment with Paystack', details: error.message });
+  }
+});
+
+// Verify Paystack payment (webhook or callback)
+profileRoute.post('/verify-payment', verifyToken, async (req, res) => {
+  try {
+    const { reference, status } = req.body;
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
+
+    const verifyResponse = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+      headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
+    });
+
+    if (verifyResponse.data.data.status === 'success') {
+      user.paymentStatus = 'paid';
+      user.subscriptionStart = new Date();
+      user.paymentHistory.push({ amount: { front: 30000, featured: 20000, mostViewed: 10000 }[user.listingType], status: 'success' });
+      await user.save();
+      res.status(200).json({ status: true, message: 'Payment verified', redirectUrl: '/leader-dashboard' });
+    } else {
+      user.paymentStatus = 'failed';
+      await user.save();
+      res.status(400).json({ status: 'error', message: 'Payment failed' });
+    }
+  } catch (error) {
+    console.error('Error verifying payment:', error.message, error.response?.data);
+    res.status(500).json({ status: 'error', message: 'Payment verification failed', details: error.message });
+  }
+});
+
+// Fetch leader listings with expiration check
+profileRoute.get('/leader-listings', verifyToken, async (req, res) => {
+   try {
+    const listings = await User.aggregate([
+      { $match: { role: 'religious_ground', paymentStatus: 'paid' } },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'profile',
+        },
+      },
+      { $unwind: '$profile' },
+      {
+        $project: {
+          _id: 0,
+          listingType: 1,
+          title: '$profile.title',
+          firstname: '$profile.firstname',
+          lastname: '$profile.lastname',
+          ministryname: '$profile.ministryname',
+          state: '$profile.state',
+          religion: '$profile.religion',
+          subscriptionStart: 1,
+          paymentStatus: 1,
+        },
+      },
+    ]).exec();
+
+    if (!listings) throw new Error('No listings found');
+
+    const frontListings = listings.filter(l => l.listingType === 'front');
+    const featuredListings = listings.filter(l => l.listingType === 'featured');
+    const mostViewedListings = listings.filter(l => l.listingType === 'mostViewed');
+
+    res.status(200).json({
+      status: true,
+      data: { frontListings, featuredListings, mostViewedListings },
+    });
+  } catch (error) {
+    console.error('Error fetching leader listings:', error.message);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch listings', details: error.message });
+  }
+});
+
+// Cron job for automatic removal (runs daily)
+cron.schedule('0 0 * * *', async () => {
+  const users = await User.find({ paymentStatus: 'paid' });
+  users.forEach(async (user) => {
+    const daysSinceStart = Math.floor((new Date() - user.subscriptionStart) / (1000 * 60 * 60 * 24));
+    if (daysSinceStart >= 30) {
+      user.paymentStatus = 'expired';
+      user.listingType = null;
+      await user.save();
+    }
+  });
+});
+
 export default profileRoute
+
+
+
+
+
+
+
+
+
+
+
 
 
 

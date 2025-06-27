@@ -8,6 +8,10 @@ import CustomComponent from './customComponents';
 import Logout from '../Logout';
 import LeaderPayment from '../chat/LeaderPyament';
 import LeaderReview from '../Leader/LeaderReview';
+import ListingSelection from '../Leader/ListingSelection';
+import FrontListing from '../../components/Listing/FrontListing';
+import MostViewedListing from '../../components/Listing/MostViewedListing';
+import FeaturedListing from '../../components/Listing/FeaturedListing';
 
 
 const LeaderDashboard = () => {
@@ -126,7 +130,7 @@ const LeaderDashboard = () => {
         <div className="flex-1 bg-white shadow-md rounded p-4 md:ml-4 sm:ml-8">
           {/* Tabs */}
           <div className="flex flex-wrap border-b">
-            {['general', 'account', 'gallery', 'review','payment-history','logout'].map((tab) => (
+            {['general', 'account', 'gallery', 'review','payment-history','promote','logout'].map((tab) => (
               <button
                 key={tab}
                 className={`py-2 px-3 sm:px-4 text-sm sm:text-base ${
@@ -224,6 +228,13 @@ const LeaderDashboard = () => {
             <div className="mt-4 sm:mt-6">
               <h3 className="text-lg sm:text-xl font-bold mb-4">Payment history</h3>
               <LeaderPayment />
+            </div>
+          )}
+          {activeTab === 'promote' && (
+            <div className="mt-4 sm:mt-6">
+              <h3 className="text-lg sm:text-xl font-bold mb-4">Promote</h3>
+              <ListingSelection />
+             
             </div>
           )}
           {activeTab === 'logout' && (

@@ -259,25 +259,7 @@ const Page1 = () => {
                     <p>{leader.email}</p>
                     <p>{leader.phoneNumber || 'No phone number'}</p>
                   </div>
-
-                  {/* View Profile Button */}
-                  <Link
-                    to={`/leader/${leader.slug}`}
-                    className="block mt-4 text-center text-indigo-900 bg-white border border-indigo-900 hover:bg-indigo-900 hover:text-white py-2 px-4 rounded-md"
-                  >
-                    <button>View Profile</button>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <p>No religious leaders found for the selected area.</p>
-        )}
-      </div>
-
-      {/* Google Maps Link */}
-      {googleMapsLink && (
+                       {googleMapsLink && (
         <div className="text-center mt-6">
           <a
             href={googleMapsLink}
@@ -289,6 +271,27 @@ const Page1 = () => {
           </a>
         </div>
       )}
+
+                  {/* View Profile Button */}
+                  <Link
+                    to={`/leader/${leader.slug}`}
+                    className="block mt-4 text-center text-indigo-900 bg-white border border-indigo-900 hover:bg-indigo-900 hover:text-white py-2 px-4 rounded-md"
+                  >
+                    <button>View Profile</button>
+                  </Link>
+
+                    {/* Google Maps Link */}
+ 
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p>No religious leaders found for the selected area.</p>
+        )}
+      </div>
+
+    
     </div>
   );
 };

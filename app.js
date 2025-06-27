@@ -200,6 +200,7 @@ import RequestReport from "./routes/others/RequestReligion.js"
 import http from "http";
 import multer from "multer";
 import fs from "fs";
+import reportRoute from "./routes/others/ReportRoute.js";
 
 // Load environment variables
 dotenv.config();
@@ -262,6 +263,7 @@ app.use("/api/profile", profileRoute);
 app.use("/api/payment", userPaymentRouter);
 app.use("/api/scam", scamreportRoute)
 app.use("/api/request", RequestReport )
+app.use("/api/report", reportRoute )
 
 // Multer configuration
 const storage = multer.diskStorage({
